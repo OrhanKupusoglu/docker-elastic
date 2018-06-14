@@ -1,0 +1,92 @@
+FROM ubuntu:16.04
+
+ARG arg_ssh_user_pwd=root:5678
+ARG arg_time_zone=Europe/Istanbul
+ARG arg_ntp_server_0=0.tr.pool.ntp.org
+ARG arg_ntp_server_1=1.tr.pool.ntp.org
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN apt-get update && \
+    apt-get install -y net-tools && \
+    apt-get install -y iputils-ping && \
+    apt-get install -y build-essential && \
+    apt-get install -y cmake && \
+    apt-get install -y python3 && \
+    apt-get install -y software-properties-common && \
+    apt-get install -y unzip && \
+    apt-get install -y curl && \
+    apt-get install -y wget && \
+    apt-get install -y apt-transport-https && \
+    apt-get install -y vim && \
+    apt-get install -y nano && \
+    apt-get install -y openssh-server && \
+    apt-get install -y ruby && \
+    apt-get install -y ruby-dev && \
+    apt-get install -y rubygems && \
+    apt-get install -y ntp && \
+    apt-get install -y git && \
+    apt-get install -y tzdata && \
+    apt-get install -y lsof && \
+    apt-get install -y sudo && \
+    gem update --quiet --no-verbose --system --development
+
+ENV DEBIAN_FRONTEND teletype
+
+RUN echo "" >> ~/.bashrc && \
+    echo "export LC_ALL=C.UTF-8" >> ~/.bashrc && \
+    echo "export LANG=C.UTF-8" >> ~/.bashrc && \
+    echo "export LANGUAGE=C.UTF-8" >> ~/.bashrc
+
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+ENV LANGUAGE C.UTF-8
+
+RUN mkdir /var/run/sshd && \
+    echo "$arg_ssh_user_pwd" | chpasswd && \
+    sed -i 's/PermitRootLogin/#PermitRootLogin/' /etc/ssh/sshd_config && \
+    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config
+
+RUN mv /etc/ntp.conf /etc/ntp.conf.orig && \
+    echo "server $arg_ntp_server_0" > /etc/ntp.conf && \
+    echo "server $arg_ntp_server_1" >> /etc/ntp.conf
+
+ENV TZ ":$arg_time_zone"
+
+RUN rm -r /var/cache/debconf && mkdir /var/cache/debconf && \
+    echo "$arg_time_zone" > /etc/timezone && \
+    rm -f /etc/localtime && \
+    ln -snf "/usr/share/zoneinfo/$arg_time_zone" /etc/localtime
+
+# Java
+# https://github.com/dockerfile/java/tree/master/oracle-java8
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
+    add-apt-repository -y ppa:webupd8team/java && \
+    apt-get update && \
+    apt-get install -y oracle-java8-installer && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /var/cache/oracle-jdk8-installer
+
+# Define commonly used JAVA_HOME variable
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+# Node.js
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+    apt-get install -y nodejs
+
+# to prevent this error:
+# Failed to connect to bus: No such file or directory
+
+ENV export XDG_RUNTIME_DIR=/run/user/0
+
+RUN mkdir -p /run/dbus && \
+    dbus-daemon --system
+
+# clean
+RUN apt-get autoremove && \
+    apt-get clean && \
+    rm -rf /var/cache/apt/* && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/*  && \
+    rm -rf /var/tmp/* && \
+    rm -rf /usr/lib/ruby/gems/*/cache/*.gem

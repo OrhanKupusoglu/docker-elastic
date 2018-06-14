@@ -1,0 +1,78 @@
+ARG arg_base_tag
+
+FROM "elastic/base:${arg_base_tag}"
+
+# defaults
+ARG arg_dir_project=EFK
+ARG arg_ver_elasticsearch=elasticsearch-6.2.4
+ARG arg_ver_kibana=kibana-6.2.4-linux-x86_64
+
+ENV DIR_PROJECT "$arg_dir_project"
+ENV VER_ELASTICSEARCH "$arg_ver_elasticsearch"
+ENV VER_KIBANA "$arg_ver_kibana"
+
+WORKDIR /$DIR_PROJECT
+
+# 1 ElasticSearch
+RUN wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz" && \
+    wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+    shasum -a 512 -c "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+    rm -f "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+# 2. Kibana
+    wget "https://artifacts.elastic.co/downloads/kibana/${VER_KIBANA}.tar.gz" && \
+    wget "https://artifacts.elastic.co/downloads/kibana/${VER_KIBANA}.tar.gz.sha512" && \
+    shasum -a 512 -c "${VER_KIBANA}.tar.gz.sha512" && \
+    rm -f "${VER_KIBANA}.tar.gz.sha512" && \
+# 3. Before Installing Fluentd
+# https://docs.fluentd.org/v1.0/articles/before-install
+    echo "root soft nofile 65536" >> /etc/security/limits.conf && \
+    echo "root hard nofile 65536" >> /etc/security/limits.conf && \
+    echo "net.core.somaxconn = 1024" >> /etc/sysctl.conf && \
+    echo "net.core.netdev_max_backlog = 5000" >> /etc/sysctl.conf && \
+    echo "net.core.rmem_max = 16777216" >> /etc/sysctl.conf && \
+    echo "net.core.wmem_max = 16777216" >> /etc/sysctl.conf && \
+    echo "net.ipv4.tcp_wmem = 4096 12582912 16777216" >> /etc/sysctl.conf && \
+    echo "net.ipv4.tcp_rmem = 4096 12582912 16777216" >> /etc/sysctl.conf && \
+    echo "net.ipv4.tcp_max_syn_backlog = 8096" >> /etc/sysctl.conf && \
+    echo "net.ipv4.tcp_slow_start_after_idle = 0" >> /etc/sysctl.conf && \
+    echo "net.ipv4.tcp_tw_reuse = 1" >> /etc/sysctl.conf && \
+    echo "net.ipv4.ip_local_port_range = 10240 65535" >> /etc/sysctl.conf && \
+    echo "vm.max_map_count = 262144" >> /etc/sysctl.conf
+
+COPY ./common/common.sh /$DIR_PROJECT/common.sh
+COPY ./common/elasticsearch.yml /$DIR_PROJECT/elasticsearch.yml
+COPY ./common/kibana.yml /$DIR_PROJECT/kibana.yml
+COPY ./efk/efk.sh /$DIR_PROJECT/efk.sh
+
+RUN adduser --disabled-password --gecos '' efk && \
+    echo 'efk ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+USER efk
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN curl -L https://toolbelt.treasuredata.com/sh/install-ubuntu-xenial-td-agent3.sh | sh && \
+    sudo td-agent-gem install fluent-plugin-secure-forward && \
+    sudo td-agent-gem install fluent-plugin-elasticsearch
+
+USER root
+
+RUN cp -a /etc/td-agent/td-agent.conf /etc/td-agent/td-agent.conf.orig
+
+COPY ./efk/td-agent.conf /etc/td-agent/td-agent.conf
+
+ENV DEBIAN_FRONTEND teletype
+
+# clean
+RUN apt-get autoremove && \
+    apt-get clean && \
+    rm -rf /var/cache/apt/* && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/*  && \
+    rm -rf /var/tmp/* && \
+    rm -rf /usr/lib/ruby/gems/*/cache/*.gem
+
+# SSH | Kibana | Fluentd-HTTP | Fluentd-forward
+EXPOSE 22 5601 8888 24224
+
+CMD ["sh", "-c", "/${DIR_PROJECT}/efk.sh"]

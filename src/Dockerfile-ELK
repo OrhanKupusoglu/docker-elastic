@@ -1,0 +1,71 @@
+ARG arg_base_tag
+
+FROM "elastic/base:${arg_base_tag}"
+
+# defaults
+ARG arg_dir_project=ELK
+ARG arg_dir_log=logs
+ARG arg_ver_elasticsearch=elasticsearch-6.2.4
+ARG arg_ver_logstash=logstash-6.2.4
+ARG arg_ver_filebeat=filebeat-6.2.4-amd64
+ARG arg_ver_kibana=kibana-6.2.4-linux-x86_64
+
+ENV DIR_PROJECT "$arg_dir_project"
+ENV DIR_LOG "$arg_dir_log"
+ENV VER_ELASTICSEARCH "$arg_ver_elasticsearch"
+ENV VER_LOGSTASH "$arg_ver_logstash"
+ENV VER_FILEBEAT "$arg_ver_filebeat"
+ENV VER_KIBANA "$arg_ver_kibana"
+
+WORKDIR /$DIR_PROJECT
+
+# 1. ElasticSearch
+RUN wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz" && \
+    wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+    shasum -a 512 -c "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+    rm -f "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+# 2. Logstash
+    mkdir -p "$DIR_LOG" && \
+    wget "https://artifacts.elastic.co/downloads/logstash/${VER_LOGSTASH}.tar.gz" && \
+    wget "https://artifacts.elastic.co/downloads/logstash/${VER_LOGSTASH}.tar.gz.sha512" && \
+    shasum -a 512 -c "${VER_LOGSTASH}.tar.gz.sha512" && \
+    rm -f "${VER_LOGSTASH}.tar.gz.sha512" && \
+# the log4j plugin is deprecated -> use Filebeat to collect logs from log4j
+# https://www.elastic.co/guide/en/logstash/current/plugins-inputs-log4j.html
+# ${VER_LOGSTASH/bin/logstash-plugin install logstash-input-log4j
+# install Filebeat
+# https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-installation.html
+    wget "https://artifacts.elastic.co/downloads/beats/filebeat/${VER_FILEBEAT}.deb" && \
+    dpkg -i "${VER_FILEBEAT}.deb" && \
+#    rm -f "${VER_FILEBEAT}.deb" && \
+# 3. Kibana
+    wget "https://artifacts.elastic.co/downloads/kibana/${VER_KIBANA}.tar.gz" && \
+    wget "https://artifacts.elastic.co/downloads/kibana/${VER_KIBANA}.tar.gz.sha512" && \
+    shasum -a 512 -c "${VER_KIBANA}.tar.gz.sha512" && \
+    rm -f "${VER_KIBANA}.tar.gz.sha512"
+
+COPY common/common.sh /$DIR_PROJECT/common.sh
+COPY common/elasticsearch.yml /$DIR_PROJECT/elasticsearch.yml
+COPY common/kibana.yml /$DIR_PROJECT/kibana.yml
+COPY elk/elk.sh /$DIR_PROJECT/elk.sh
+COPY elk/logstash.yml /$DIR_PROJECT/logstash.yml
+COPY elk/logstash.conf /$DIR_PROJECT/logstash.conf
+COPY elk/pipelines.yml /$DIR_PROJECT/pipelines.yml
+COPY elk/filebeat.yml /$DIR_PROJECT/filebeat.yml
+
+RUN adduser --disabled-password --gecos '' elk && \
+    echo 'elk ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+# clean
+RUN apt-get autoremove && \
+    apt-get clean && \
+    rm -rf /var/cache/apt/* && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/*  && \
+    rm -rf /var/tmp/* && \
+    rm -rf /usr/lib/ruby/gems/*/cache/*.gem
+
+# SSH | Kibana | Logstash HTTP | Logstash TCP | Logstash UDP
+EXPOSE 22 5601 8888 12345 12345/udp
+
+CMD ["sh", "-c", "/${DIR_PROJECT}/elk.sh"]

@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  base:
+    build:
+      context: '.'
+      dockerfile: 'Dockerfile-Base'
+      args:
+        arg_ssh_user_pwd: 'root:1234'
+        arg_time_zone: 'Europe/Berlin'
+        arg_ntp_server_0: '0.de.pool.ntp.org'
+        arg_ntp_server_1: '1.de.pool.ntp.org'
+    image: "elastic/base:${X_BASE_TAG}"
+  elk:
+    build:
+      context: '.'
+      dockerfile: 'Dockerfile-ELK'
+      args:
+        arg_base_tag: "${X_BASE_TAG}"
+        arg_dir_project: "${X_ELK_DIR}"
+        arg_dir_log: "${X_DIR_LOG}"
+        arg_ver_elasticsearch: "${X_VER_ELASTICSEARCH}"
+        arg_ver_logstash: "${X_VER_LOGSTASH}"
+        arg_ver_kibana: "${X_VER_KIBANA}"
+    image: "elastic/elk:${X_ELK_TAG}"
+    container_name: 'elk'
+    hostname: 'elk'
+    ports:
+     - '2222:22'
+     - "5601:5601"
+     - "8888:8888"
+     - "12345:12345"
+     - "12345:12345/udp"
+  efk:
+    build:
+      context: '.'
+      dockerfile: 'Dockerfile-EFK'
+      args:
+        arg_base_tag: "${X_BASE_TAG}"
+        arg_dir_project: "${X_EFK_DIR}"
+        arg_ver_elasticsearch: "${X_VER_ELASTICSEARCH}"
+        arg_ver_kibana: "${X_VER_KIBANA}"
+    image: "elastic/efk:${X_EFK_TAG}"
+    container_name: 'efk'
+    hostname: 'efk'
+    ports:
+     - '2222:22'
+     - "5601:5601"
+     - "8888:8888"
+     - "24224:24224"
