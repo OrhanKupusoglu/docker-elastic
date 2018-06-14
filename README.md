@@ -74,6 +74,7 @@ $ docker-compose ps
 The application can be built and run with a shell script, [docker.sh](./src/docker.sh).
 
 ```
+$ cd src
 $ ./docker.sh help
 USAGE: enter #1: a stack, and #2: optionally detached mode
     elk | efk   -- #1: stack is ELK = ElasticSearch + Logstash + Kibana
