@@ -4,7 +4,7 @@ ElasticSearch is based on [Apache Lucene](https://lucene.apache.org/):
 
 > Elasticsearch is a distributed, RESTful search and analytics engine capable of solving a growing number of use cases. As the heart of the Elastic Stack, it centrally stores your data so you can discover the expected and uncover the unexpected.
 
-ElasticSearch  is generally bundled with a data processing pipeline and a Web UI. These three products make a **stack**. The *de facto* standard is Elastic's own **ELK stack**, consisting of open source [ElasticSearch](https://www.elastic.co/products/elasticsearch), [Logstash](https://www.elastic.co/products/logstash) and [Kibana](https://www.elastic.co/products/kibana). Since the introduction of [Beats](https://www.elastic.co/products/beats) the **ELK stack** has been renamed the **Elastic Stack**. The current Docker scripts install the [Filebeats](https://www.elastic.co/products/beats/filebeat) also.
+ElasticSearch  is generally bundled with a data processing pipeline and a Web UI. These three products make a **stack**. The *de facto* standard is Elastic's own **ELK stack**, consisting of open source [ElasticSearch](https://www.elastic.co/products/elasticsearch), [Logstash](https://www.elastic.co/products/logstash) and [Kibana](https://www.elastic.co/products/kibana). Since the introduction of [Beats](https://www.elastic.co/products/beats) the **ELK stack** has been renamed as the **Elastic Stack**. The current Docker scripts install the [Filebeats](https://www.elastic.co/products/beats/filebeat) also.
 
 In the so-called **EFK stack** [Fluentd](https://www.fluentd.org/) replaces ElasticSearch's own **Logstash** in the well-known **ELK stack**:
 
