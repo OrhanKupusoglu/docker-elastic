@@ -5,9 +5,30 @@
 DIR_RUN="$(cd "$(dirname "$0")" && pwd)"
 cd $DIR_RUN
 
-chown -R efk:efk $DIR_RUN
+# Important System Configuration
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/system-config.html
 
-su efk << EOF
+# man fstab
+# man limits.conf
+# ulimit -a
+# man sysctl.conf
+# sysctl -a
+
+### Disable swapping:
+#swapoff -a
+### File Descriptors:
+#ulimit -n 65536
+### Virtual memory:
+#sysctl -w vm.max_map_count=262144
+### Number of threads:
+#ulimit -u 4096
+
+# Before Installing Fluentd
+# https://docs.fluentd.org/v1.0/articles/before-install
+
+chown -R elasticsearch:elasticsearch $DIR_RUN
+
+su elasticsearch << EOF
 source ./common.sh
 
 print_ver

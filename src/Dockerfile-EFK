@@ -14,7 +14,13 @@ ENV VER_KIBANA "$arg_ver_kibana"
 WORKDIR /$DIR_PROJECT
 
 # 1 ElasticSearch
-RUN wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz" && \
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/system-config.html
+RUN echo "root soft nofile 65536" >> /etc/security/limits.conf && \
+    echo "root hard nofile 65536" >> /etc/security/limits.conf && \
+    echo "root soft nproc 4096" >> /etc/security/limits.conf && \
+    echo "root hard nproc 4096" >> /etc/security/limits.conf && \
+    echo "vm.max_map_count = 262144" >> /etc/sysctl.conf && \
+    wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz" && \
     wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz.sha512" && \
     shasum -a 512 -c "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
     rm -f "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
@@ -25,8 +31,6 @@ RUN wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEAR
     rm -f "${VER_KIBANA}.tar.gz.sha512" && \
 # 3. Before Installing Fluentd
 # https://docs.fluentd.org/v1.0/articles/before-install
-    echo "root soft nofile 65536" >> /etc/security/limits.conf && \
-    echo "root hard nofile 65536" >> /etc/security/limits.conf && \
     echo "net.core.somaxconn = 1024" >> /etc/sysctl.conf && \
     echo "net.core.netdev_max_backlog = 5000" >> /etc/sysctl.conf && \
     echo "net.core.rmem_max = 16777216" >> /etc/sysctl.conf && \
@@ -36,18 +40,17 @@ RUN wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEAR
     echo "net.ipv4.tcp_max_syn_backlog = 8096" >> /etc/sysctl.conf && \
     echo "net.ipv4.tcp_slow_start_after_idle = 0" >> /etc/sysctl.conf && \
     echo "net.ipv4.tcp_tw_reuse = 1" >> /etc/sysctl.conf && \
-    echo "net.ipv4.ip_local_port_range = 10240 65535" >> /etc/sysctl.conf && \
-    echo "vm.max_map_count = 262144" >> /etc/sysctl.conf
+    echo "net.ipv4.ip_local_port_range = 10240 65535" >> /etc/sysctl.conf
 
 COPY ./common/common.sh /$DIR_PROJECT/common.sh
 COPY ./common/elasticsearch.yml /$DIR_PROJECT/elasticsearch.yml
 COPY ./common/kibana.yml /$DIR_PROJECT/kibana.yml
 COPY ./efk/efk.sh /$DIR_PROJECT/efk.sh
 
-RUN adduser --disabled-password --gecos '' efk && \
-    echo 'efk ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+RUN adduser --disabled-password --gecos '' elasticsearch && \
+    echo 'elasticsearch ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
-USER efk
+USER elasticsearch
 
 ENV DEBIAN_FRONTEND noninteractive
 

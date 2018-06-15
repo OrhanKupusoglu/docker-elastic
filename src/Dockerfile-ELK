@@ -20,7 +20,13 @@ ENV VER_KIBANA "$arg_ver_kibana"
 WORKDIR /$DIR_PROJECT
 
 # 1. ElasticSearch
-RUN wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz" && \
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/system-config.html
+RUN echo "root soft nofile 65536" >> /etc/security/limits.conf && \
+    echo "root hard nofile 65536" >> /etc/security/limits.conf && \
+    echo "root soft nproc 4096" >> /etc/security/limits.conf && \
+    echo "root hard nproc 4096" >> /etc/security/limits.conf && \
+    echo "vm.max_map_count = 262144" >> /etc/sysctl.conf && \
+    wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz" && \
     wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz.sha512" && \
     shasum -a 512 -c "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
     rm -f "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
@@ -53,8 +59,8 @@ COPY elk/logstash.conf /$DIR_PROJECT/logstash.conf
 COPY elk/pipelines.yml /$DIR_PROJECT/pipelines.yml
 COPY elk/filebeat.yml /$DIR_PROJECT/filebeat.yml
 
-RUN adduser --disabled-password --gecos '' elk && \
-    echo 'elk ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+RUN adduser --disabled-password --gecos '' elasticsearch && \
+    echo 'elasticsearch ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 # clean
 RUN apt-get autoremove && \
