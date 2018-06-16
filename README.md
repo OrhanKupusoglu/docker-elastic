@@ -36,9 +36,11 @@ $ man docker-image-rm
 
 $ docker image ls
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-efk-server/app      0.0.6               1b212fcf1d8f        48 seconds ago      1.43GB
-efk-server/base     0.0.6               b677a93f36a7        9 minutes ago       1.14GB
-ubuntu              16.04               5e8b97a2a082        35 hours ago        114MB
+elastic/elk         0.0.3               db7d5112c74c        9 minutes ago       2.4GB
+elastic/efk         0.0.3               12c207e79905        15 minutes ago      2.22GB
+elastic/stack       0.0.3               cfee2b6d2e57        16 minutes ago      1.74GB
+elastic/base        0.0.3               18f4d876e57b        7 hours ago         1.14GB
+ubuntu              16.04               5e8b97a2a082        11 days ago         114MB
 ```
 
 Docker containers can be listed and removed with **docker container** family commands.
@@ -50,8 +52,8 @@ $ man docker-container-ls
 $ man docker-container-rm
 
 $ docker container ls
-CONTAINER ID        IMAGE                  COMMAND                  CREATED              STATUS              PORTS                                                                                                                    NAMES
-66667978a228        efk-server/app:0.0.6   "sh -c /${DIR_PROJEC…"   About a minute ago   Up About a minute   0.0.0.0:5601->5601/tcp, 0.0.0.0:8888->8888/tcp, 0.0.0.0:9200->9200/tcp, 0.0.0.0:24224->24224/tcp, 0.0.0.0:2222->22/tcp   efk
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                                                                                                                      NAMES
+fcc7931971f2        elastic/elk:0.0.3   "sh -c /${DIR_STACK}…"   27 seconds ago      Up 26 seconds       0.0.0.0:5601->5601/tcp, 0.0.0.0:8888->8888/tcp, 0.0.0.0:12345->12345/tcp, 0.0.0.0:12345->12345/udp, 0.0.0.0:2222->22/tcp   elk
 ```
 &nbsp;
 
@@ -87,32 +89,32 @@ EXAMPLE:
     ./docker.sh elk det
     ./docker.sh down
 
-$ ./docker.sh efk
+$ ./docker.sh elk
 . . .
-++ 'base' image is ready   : elastic/base:0.0.1
+++ 'base' image is ready      : elastic/base:0.0.3
 
-++ 'stack' image is missing: elastic/efk:0.0.1
 
-Building efk
-Step 1/25 : ARG arg_base_tag
-Step 2/25 : FROM "elastic/base:${arg_base_tag}"
- ---> cf7a3d9677c3
-Step 3/25 : ARG arg_dir_project=EFK
- ---> Running in e97dd3fcfd51
-Removing intermediate container e97dd3fcfd51
+++ 'stack' image is ready     : elastic/stack:0.0.3
+
+
+++ 'elk' image is missing     : elastic/elk:0.0.3
+
+Building elk
+Step 1/21 : ARG arg_tag_stack
+Step 2/21 : FROM "elastic/stack:${arg_tag_stack}"
+ ---> cfee2b6d2e57
 . . .
-efk     | -- started
-efk     |
-efk     | [2018-06-14T20:49:38,619][INFO ][o.e.c.s.MasterService    ] [t-An6Kj] zen-disco-elected-as-master ([0] nodes joined), reason: new_master {t-An6Kj}{t-An6KjeRtWVd5BOPA5qPQ}{F0y1rY8eQLm210Q8-Pyabg}{127.0.0.1}{127.0.0.1:9300}
-efk     | [2018-06-14T20:49:38,623][INFO ][o.e.c.s.ClusterApplierService] [t-An6Kj] new_master {t-An6Kj}{t-An6KjeRtWVd5BOPA5qPQ}{F0y1rY8eQLm210Q8-Pyabg}{127.0.0.1}{127.0.0.1:9300}, reason: apply cluster state (from master [master {t-An6Kj}{t-An6KjeRtWVd5BOPA5qPQ}{F0y1rY8eQLm210Q8-Pyabg}{127.0.0.1}{127.0.0.1:9300} committed version [1] source [zen-disco-elected-as-master ([0] nodes joined)]])
+elk      | ++ started
+elk      | 
+elk      | Sending Logstash's logs to /ELASTIC/logstash-6.3.0/logs which is now configured via log4j2.properties
 ```
 
 The running containers can be stopped with CTRL+C:
 
 ```
 ^CGracefully stopping... (press Ctrl+C again to force)
-Stopping efk ...
-Killing efk ... done
+Stopping elk ... 
+Killing elk ... done
 ```
 
 The **ubuntu:16:04** is the where **elastic/base** is derived from, and in turn the **elastic/efk**  and **elastic/elk** image is derived from this base image.
@@ -124,16 +126,17 @@ $ ./docker.sh down
 ++ stopping and removing containers
 
 ++ IMAGE LIST:
-REPOSITORY          TAG                 IMAGE ID            CREATED              SIZE
-elastic/efk         0.0.1               9579db15cf1e        About a minute ago   1.44GB
-elastic/elk         0.0.1               f72ddb4f4570        3 hours ago          1.47GB
-elastic/base        0.0.1               cf7a3d9677c3        3 hours ago          1.14GB
-ubuntu              16.04               5e8b97a2a082        8 days ago           114MB
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+elastic/elk         0.0.3               db7d5112c74c        17 minutes ago      2.4GB
+elastic/efk         0.0.3               12c207e79905        22 minutes ago      2.22GB
+elastic/stack       0.0.3               cfee2b6d2e57        23 minutes ago      1.74GB
+elastic/base        0.0.3               18f4d876e57b        7 hours ago         1.14GB
+ubuntu              16.04               5e8b97a2a082        11 days ago         114MB
 
 ++ CONTAINER LIST:
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 
-Removing efk ... done
+Removing elk ... done
 Removing network src_default
 
 ++ CONTAINER LIST ALL:
@@ -150,30 +153,36 @@ Docker Compose has a **detached mode**:
 This is useful to run containers as services.
 
 ```
-$ ./docker.sh efk det
-STACK   : efk
+$ ./docker.sh elk det
+STACK   : elk
 DETACHED: true
 
 ++ IMAGE LIST:
 REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-elastic/efk         0.0.1               9579db15cf1e        4 minutes ago       1.44GB
-elastic/elk         0.0.1               f72ddb4f4570        3 hours ago         1.47GB
-elastic/base        0.0.1               cf7a3d9677c3        3 hours ago         1.14GB
-ubuntu              16.04               5e8b97a2a082        8 days ago          114MB
+elastic/elk         0.0.3               db7d5112c74c        17 minutes ago      2.4GB
+elastic/efk         0.0.3               12c207e79905        23 minutes ago      2.22GB
+elastic/stack       0.0.3               cfee2b6d2e57        24 minutes ago      1.74GB
+elastic/base        0.0.3               18f4d876e57b        7 hours ago         1.14GB
+ubuntu              16.04               5e8b97a2a082        11 days ago         114MB
 
 ++ CONTAINER LIST:
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
 
-++ 'base' image is ready   : elastic/base:0.0.1
 
-++ 'stack' image is ready  : elastic/efk:0.0.1
+++ 'base' image is ready      : elastic/base:0.0.3
+
+
+++ 'stack' image is ready     : elastic/stack:0.0.3
+
+
+++ 'elk' image is ready       : elastic/elk:0.0.3
 
 Creating network "src_default" with the default driver
-Creating efk ... done
+Creating elk ... done
 
 ++ CONTAINER LIST:
-CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                  PORTS                                                                                            NAMES
-4700b1bc7ada        elastic/efk:0.0.1   "sh -c /${DIR_PROJEC…"   1 second ago        Up Less than a second   0.0.0.0:5601->5601/tcp, 0.0.0.0:8888->8888/tcp, 0.0.0.0:24224->24224/tcp, 0.0.0.0:2222->22/tcp   efk
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS                  PORTS                                                                                                                      NAMES
+133d65d47802        elastic/elk:0.0.3   "sh -c /${DIR_STACK}…"   1 second ago        Up Less than a second   0.0.0.0:5601->5601/tcp, 0.0.0.0:8888->8888/tcp, 0.0.0.0:12345->12345/tcp, 0.0.0.0:12345->12345/udp, 0.0.0.0:2222->22/tcp   elk
 
 $ ./docker.sh down
 ```
@@ -181,6 +190,30 @@ $ ./docker.sh down
 
 ## Testing
 
+### ELK
+
+The index **logstash-2018.06.14** can be discovered on [Kibana](http://localhost:5601) with field **@timestamp** as *Time Filter field name*.
+
+```
+$ curl -v -d '{"motor-glider": "Stemme S12", "airlifter": "Airbus C295"}'H "Content-Type: application/json" http://localhost:8888
+* Rebuilt URL to: http://localhost:8888/
+*   Trying 127.0.0.1...
+* Connected to localhost (127.0.0.1) port 8888 (#0)
+> POST / HTTP/1.1
+> Host: localhost:8888
+> User-Agent: curl/7.47.0
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 58
+> 
+* upload completely sent off: 58 out of 58 bytes
+< HTTP/1.1 200 OK
+< Content-Type: text/plain
+< Content-Length: 2
+< 
+* Connection #0 to host localhost left intact
+ok
+```
 ### EFK
 
 The EFK stack can be tested with an HTTP request using the ubiquitous [curl](https://curl.haxx.se/). Here **input-logs** refers to the  match **input-logs** as set by the [td-agent.conf](./src/efk/td-agent.conf). There is a slight delay between log received and displayed.
@@ -220,33 +253,6 @@ $ curl -v -d "json={\"@timestamp\":\"${TIMESTAMP}\",\"airliner\":\"Airbus A350\"
 * Connection #0 to host localhost left intact
 ```
 
-### ELK
-
-The index **logstash-2018.06.14** can be discovered on [Kibana](http://localhost:5601) with field **@timestamp** as *Time Filter field name*.
-
-```
-$ curl -v -d '{"motor-glider": "Stemme S12", "airlifter": "Airbus C295"}'H "Content-Type: application/json" http://localhost:8888
-* Rebuilt URL to: http://localhost:8888/
-*   Trying 127.0.0.1...
-* Connected to localhost (127.0.0.1) port 8888 (#0)
-> POST / HTTP/1.1
-> Host: localhost:8888
-> User-Agent: curl/7.47.0
-> Accept: */*
-> Content-Type: application/json
-> Content-Length: 58
-> 
-* upload completely sent off: 58 out of 58 bytes
-< HTTP/1.1 200 OK
-< Content-Type: text/plain
-< Content-Length: 2
-< 
-* Connection #0 to host localhost left intact
-ok
-```
-
-
-
 ## SSH
 
 The container can be accessed via SSH on port **2222** by the **root** user with password **1234**.
@@ -271,10 +277,13 @@ individual files in /usr/share/doc/*/copyright.
 Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
 applicable law.
 
-root@efk:~# cd /EFK/
-root@efk:/EFK# ls -1
+root@elk:~# cd /ELASTIC/
+root@elk:/ELASTIC# ls -1
 common.sh
-efk.sh
-elasticsearch-6.2.4
-kibana-6.2.4-linux-x86_64
+elasticsearch-6.3.0
+elk.sh
+filebeat-6.3.0-amd64.deb
+kibana-6.3.0-linux-x86_64
+log
+logstash-6.3.0
 ```
