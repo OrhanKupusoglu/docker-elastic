@@ -83,7 +83,7 @@ docker container ls
 echo
 
 # docker-compose build base
-# docker-compose build elastic
+# docker-compose build stack
 # docker-compose build elk
 # docker-compose build efk
 
