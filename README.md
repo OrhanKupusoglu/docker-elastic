@@ -271,7 +271,7 @@ Or permanently by **host OS's /etc/sysctl.conf** and restarting:
 ```
 # echo "vm.max_map_count = 262144" >> /etc/sysctl.conf
 ```
-See [Virtual Memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html).
+See [Elasticsearch Reference - Virtual Memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html).
 
 **Fluentd** for high load environments requires optimization of network kernel parameters. See [Before Installing Fluentd](https://docs.fluentd.org/v1.0/articles/before-install). Since these parameters are issued with **/etc/sysctl.conf**, this step requires modification on **host OS's sysctl.conf** either for the current session (via **sysctl -w PARAMETER**) or permanently (by **/etc/sysctl.conf**) after restart.
 
