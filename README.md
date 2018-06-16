@@ -71,6 +71,27 @@ $ docker-compose images
 $ docker-compose ps
 ```
 
+### Important System Configuration
+
+Kibana may give a warning:
+
+```
+elk      | [2018-06-16T23:51:26,504][WARN ][o.e.b.BootstrapChecks    ] [Jvu1Yt4] max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+```
+This warning can only be suppressed by increasing **vm.max_map_count** to **262144** on the **host OS**, not on the container.
+
+Either for the current session as root:
+```
+# sysctl -w vm.max_map_count=262144
+```
+Or permanently by **host OS's /etc/sysctl.conf** and restarting:
+```
+# echo "vm.max_map_count = 262144" >> /etc/sysctl.conf
+```
+See [Virtual Memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html).
+
+**Fluentd** for high load environments requires optimization of network kernel parameters. See [Before Installing Fluentd](https://docs.fluentd.org/v1.0/articles/before-install). Since these parameters are issued with **/etc/sysctl.conf**, this step requires modification on **host OS's /etc/sysctl.conf** and restart.
+
 ### Build Script
 
 The application can be built and run with a shell script, [docker.sh](./src/docker.sh).
@@ -93,9 +114,7 @@ $ ./docker.sh elk
 . . .
 ++ 'base' image is ready      : elastic/base:0.0.3
 
-
 ++ 'stack' image is ready     : elastic/stack:0.0.3
-
 
 ++ 'elk' image is missing     : elastic/elk:0.0.3
 
@@ -171,9 +190,7 @@ CONTAINER ID        IMAGE               COMMAND             CREATED             
 
 ++ 'base' image is ready      : elastic/base:0.0.3
 
-
 ++ 'stack' image is ready     : elastic/stack:0.0.3
-
 
 ++ 'elk' image is ready       : elastic/elk:0.0.3
 
