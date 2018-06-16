@@ -295,12 +295,12 @@ Ubuntu comes with ABSOLUTELY NO WARRANTY, to the extent permitted by
 applicable law.
 
 root@elk:~# cd /ELASTIC/
-root@elk:/ELASTIC# ls -1
-common.sh
-elasticsearch-6.3.0
-elk.sh
+root@elk:/ELASTIC# ls -1F
+common.sh*
+elasticsearch-6.3.0/
+elk.sh*
 filebeat-6.3.0-amd64.deb
-kibana-6.3.0-linux-x86_64
-log
-logstash-6.3.0
+kibana-6.3.0-linux-x86_64/
+log/
+logstash-6.3.0/
 ```
