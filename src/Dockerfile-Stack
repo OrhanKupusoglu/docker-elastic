@@ -13,6 +13,8 @@ ENV VER_KIBANA "$arg_ver_kibana"
 
 # Important System Configuration
 # https://www.elastic.co/guide/en/elasticsearch/reference/current/system-config.html
+# Before Installing Fluentd
+# https://docs.fluentd.org/v1.0/articles/before-install
 RUN echo "root soft nofile 65536" >> /etc/security/limits.conf && \
     echo "root hard nofile 65536" >> /etc/security/limits.conf && \
     echo "root soft nproc 4096" >> /etc/security/limits.conf && \
