@@ -12,6 +12,8 @@ In the so-called **EFK stack** [Fluentd](https://www.fluentd.org/) replaces Elas
 
 In each [efk](./src/efk) and [elk](./src/elk) directories you can find all configuration file's originals, with **.orig** extension, and the modified versions, so that easy differentiation is possible.
 
+&nbsp;
+
 ## Docker
 
 Docker is a [containerization](https://docs.docker.com/get-started/) tool. The free [Community Edition](https://www.docker.com/community-edition) is easy to [install](https://docs.docker.com/install/). The optional [post-installation steps](https://docs.docker.com/install/linux/linux-postinstall/) enable running Docker commands without root privileges.
@@ -70,27 +72,6 @@ $ docker-compose help
 $ docker-compose images
 $ docker-compose ps
 ```
-
-### Important System Configuration
-
-Kibana may give a warning:
-
-```
-elk      | [2018-06-16T23:51:26,504][WARN ][o.e.b.BootstrapChecks    ] [Jvu1Yt4] max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
-```
-This warning can only be suppressed by increasing **vm.max_map_count** to **262144** on the **host OS**, not on the container.
-
-Either for the current session as root:
-```
-# sysctl -w vm.max_map_count=262144
-```
-Or permanently by **host OS's /etc/sysctl.conf** and restarting:
-```
-# echo "vm.max_map_count = 262144" >> /etc/sysctl.conf
-```
-See [Virtual Memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html).
-
-**Fluentd** for high load environments requires optimization of network kernel parameters. See [Before Installing Fluentd](https://docs.fluentd.org/v1.0/articles/before-install). Since these parameters are issued with **/etc/sysctl.conf**, this step requires modification on **host OS's /etc/sysctl.conf** and restart.
 
 ### Build Script
 
@@ -203,6 +184,7 @@ CONTAINER ID        IMAGE               COMMAND                  CREATED        
 
 $ ./docker.sh down
 ```
+
 &nbsp;
 
 ## Testing
@@ -269,6 +251,31 @@ $ curl -v -d "json={\"@timestamp\":\"${TIMESTAMP}\",\"airliner\":\"Airbus A350\"
 <
 * Connection #0 to host localhost left intact
 ```
+
+&nbsp;
+
+## Important System Configuration
+
+Kibana may give a warning:
+
+```
+elk      | [2018-06-16T23:51:26,504][WARN ][o.e.b.BootstrapChecks    ] [Jvu1Yt4] max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+```
+This warning can only be suppressed by increasing **vm.max_map_count** to **262144** on the **host OS**, not on the container.
+
+Either for the current session as root:
+```
+# sysctl -w vm.max_map_count=262144
+```
+Or permanently by **host OS's /etc/sysctl.conf** and restarting:
+```
+# echo "vm.max_map_count = 262144" >> /etc/sysctl.conf
+```
+See [Virtual Memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html).
+
+**Fluentd** for high load environments requires optimization of network kernel parameters. See [Before Installing Fluentd](https://docs.fluentd.org/v1.0/articles/before-install). Since these parameters are issued with **/etc/sysctl.conf**, this step requires modification on **host OS's /etc/sysctl.conf** and restart.
+
+&nbsp;
 
 ## SSH
 
