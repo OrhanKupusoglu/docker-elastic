@@ -10,19 +10,28 @@ services:
         arg_time_zone: 'Europe/Berlin'
         arg_ntp_server_0: '0.de.pool.ntp.org'
         arg_ntp_server_1: '1.de.pool.ntp.org'
-    image: "elastic/base:${X_BASE_TAG}"
+    image: "elastic/base:${X_TAG_BASE}"
+  stack:
+    build:
+      context: '.'
+      dockerfile: 'Dockerfile-Stack'
+      args:
+        arg_tag_base: "${X_TAG_BASE}"
+        arg_dir_stack: "${X_DIR_STACK}"
+        arg_ver_elasticsearch: "${X_VER_ELASTICSEARCH}"
+        arg_ver_kibana: "${X_VER_KIBANA}"
+    image: "elastic/stack:${X_TAG_STACK}"
   elk:
     build:
       context: '.'
       dockerfile: 'Dockerfile-ELK'
       args:
-        arg_base_tag: "${X_BASE_TAG}"
-        arg_dir_project: "${X_ELK_DIR}"
+        arg_tag_stack: "${X_TAG_STACK}"
+        arg_dir_stack: "${X_DIR_STACK}"
         arg_dir_log: "${X_DIR_LOG}"
-        arg_ver_elasticsearch: "${X_VER_ELASTICSEARCH}"
         arg_ver_logstash: "${X_VER_LOGSTASH}"
-        arg_ver_kibana: "${X_VER_KIBANA}"
-    image: "elastic/elk:${X_ELK_TAG}"
+        arg_ver_filebeat: "${X_VER_FILEBEAT}"
+    image: "elastic/elk:${X_TAG_ELK}"
     container_name: 'elk'
     hostname: 'elk'
     ports:
@@ -36,11 +45,9 @@ services:
       context: '.'
       dockerfile: 'Dockerfile-EFK'
       args:
-        arg_base_tag: "${X_BASE_TAG}"
-        arg_dir_project: "${X_EFK_DIR}"
-        arg_ver_elasticsearch: "${X_VER_ELASTICSEARCH}"
-        arg_ver_kibana: "${X_VER_KIBANA}"
-    image: "elastic/efk:${X_EFK_TAG}"
+        arg_tag_stack: "${X_TAG_STACK}"
+        arg_dir_stack: "${X_DIR_STACK}"
+    image: "elastic/efk:${X_TAG_EFK}"
     container_name: 'efk'
     hostname: 'efk'
     ports:

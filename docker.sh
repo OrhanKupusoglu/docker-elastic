@@ -83,6 +83,7 @@ docker container ls
 echo
 
 # docker-compose build base
+# docker-compose build elastic
 # docker-compose build elk
 # docker-compose build efk
 
@@ -93,32 +94,43 @@ then
     # read tag
     source ".env"
 
-    BASE_IMAGE="elastic/base"
-    FOUND_IMAGE=$(find_image "$BASE_IMAGE" "$X_BASE_TAG")
+    IMAGE_BASE="elastic/base"
+    FOUND_BASE=$(find_image "$IMAGE_BASE" "$X_TAG_BASE")
 
-    if [[ $FOUND_IMAGE -eq 0 ]]
+    if [[ $FOUND_BASE -eq 0 ]]
     then
-        printf "++ 'base' image is ready   : $BASE_IMAGE:$X_BASE_TAG\n\n"
+        printf "\n++ 'base' image is ready      : $IMAGE_BASE:$X_TAG_BASE\n\n"
     else
-        printf "++ 'base' image is missing : $BASE_IMAGE:$X_BASE_TAG\n\n"
+        printf "\n++ 'base' image is missing    : $IMAGE_BASE:$X_TAG_BASE\n\n"
         docker-compose build base
+    fi
+
+    IMAGE_ELASTIC="elastic/stack"
+    FOUND_ELASTIC=$(find_image "$IMAGE_ELASTIC" "$X_TAG_STACK")
+
+    if [[ $FOUND_ELASTIC -eq 0 ]]
+    then
+        printf "\n++ 'stack' image is ready     : $IMAGE_ELASTIC:$X_TAG_STACK\n\n"
+    else
+        printf "\n++ 'stack' image is missing   : $IMAGE_ELASTIC:$X_TAG_STACK\n\n"
+        docker-compose build stack
     fi
 
     if [[ "$DOWN_STACK" == "efk" ]]
     then
-        STACK_TAG="$X_EFK_TAG"
+        TAG_STACK="$X_TAG_EFK"
     else
-        STACK_TAG="$X_ELK_TAG"
+        TAG_STACK="$X_TAG_ELK"
     fi
 
-    STACK_IMAGE="elastic/$DOWN_STACK"
-    FOUND_IMAGE=$(find_image "$STACK_IMAGE" "$STACK_TAG")
+    IMAGE_STACK="elastic/$DOWN_STACK"
+    FOUND_STACK=$(find_image "$IMAGE_STACK" "$TAG_STACK")
 
-    if [[ $FOUND_IMAGE -eq 0 ]]
+    if [[ $FOUND_STACK -eq 0 ]]
     then
-        printf "++ 'stack' image is ready  : $STACK_IMAGE:$STACK_TAG\n\n"
+        printf "\n++ '${DOWN_STACK}' image is ready       : $IMAGE_STACK:$TAG_STACK\n\n"
     else
-        printf "++ 'stack' image is missing: $STACK_IMAGE:$STACK_TAG\n\n"
+        printf "\n++ '${DOWN_STACK}' image is missing     : $IMAGE_STACK:$TAG_STACK\n\n"
         docker-compose build "$DOWN_STACK"
     fi
 fi

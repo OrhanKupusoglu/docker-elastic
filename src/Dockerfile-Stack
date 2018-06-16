@@ -1,0 +1,53 @@
+ARG arg_tag_base
+
+FROM "elastic/base:${arg_tag_base}"
+
+# defaults
+ARG arg_dir_stack=ELASTIC
+ARG arg_ver_elasticsearch=elasticsearch-6.3.0
+ARG arg_ver_kibana=kibana-6.3.0-linux-x86_64
+
+ENV DIR_STACK "$arg_dir_stack"
+ENV VER_ELASTICSEARCH "$arg_ver_elasticsearch"
+ENV VER_KIBANA "$arg_ver_kibana"
+
+# Important System Configuration
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/system-config.html
+RUN echo "root soft nofile 65536" >> /etc/security/limits.conf && \
+    echo "root hard nofile 65536" >> /etc/security/limits.conf && \
+    echo "root soft nproc 4096" >> /etc/security/limits.conf && \
+    echo "root hard nproc 4096" >> /etc/security/limits.conf
+# /etc/sysctl.conf
+# must be set on the host OS - otherwise:
+# sysctl: setting key "xxx.yyy.zzz": Read-only file system
+
+WORKDIR /$DIR_STACK
+
+# 1. ElasticSearch
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/system-config.html
+RUN wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz" && \
+    wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+    shasum -a 512 -c "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+    rm -f "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
+# 2. Kibana
+    wget "https://artifacts.elastic.co/downloads/kibana/${VER_KIBANA}.tar.gz" && \
+    wget "https://artifacts.elastic.co/downloads/kibana/${VER_KIBANA}.tar.gz.sha512" && \
+    shasum -a 512 -c "${VER_KIBANA}.tar.gz.sha512" && \
+    rm -f "${VER_KIBANA}.tar.gz.sha512"
+
+COPY common/common.sh /$DIR_STACK/common.sh
+COPY common/elasticsearch.yml /$DIR_STACK/elasticsearch.yml
+COPY common/kibana.yml /$DIR_STACK/kibana.yml
+
+RUN adduser --disabled-password --gecos '' elasticsearch && \
+    echo 'elasticsearch ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers && \
+    chown -R elasticsearch:elasticsearch /$DIR_STACK
+
+# clean
+RUN apt-get autoremove && \
+    apt-get clean && \
+    rm -rf /var/cache/apt/* && \
+    rm -rf /var/lib/apt/lists/* && \
+    rm -rf /tmp/*  && \
+    rm -rf /var/tmp/* && \
+    rm -rf /usr/lib/ruby/gems/*/cache/*.gem

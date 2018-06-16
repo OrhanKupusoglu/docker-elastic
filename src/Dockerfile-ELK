@@ -1,37 +1,22 @@
-ARG arg_base_tag
+ARG arg_tag_stack
 
-FROM "elastic/base:${arg_base_tag}"
+FROM "elastic/stack:${arg_tag_stack}"
 
 # defaults
-ARG arg_dir_project=ELK
+ARG arg_dir_stack=ELASTIC
 ARG arg_dir_log=logs
-ARG arg_ver_elasticsearch=elasticsearch-6.2.4
-ARG arg_ver_logstash=logstash-6.2.4
-ARG arg_ver_filebeat=filebeat-6.2.4-amd64
-ARG arg_ver_kibana=kibana-6.2.4-linux-x86_64
+ARG arg_ver_logstash=logstash-6.3.0
+ARG arg_ver_filebeat=filebeat-6.3.0-amd64
 
-ENV DIR_PROJECT "$arg_dir_project"
+ENV DIR_STACK "$arg_dir_stack"
 ENV DIR_LOG "$arg_dir_log"
-ENV VER_ELASTICSEARCH "$arg_ver_elasticsearch"
 ENV VER_LOGSTASH "$arg_ver_logstash"
 ENV VER_FILEBEAT "$arg_ver_filebeat"
-ENV VER_KIBANA "$arg_ver_kibana"
 
-WORKDIR /$DIR_PROJECT
+WORKDIR /$DIR_STACK
 
-# 1. ElasticSearch
-# https://www.elastic.co/guide/en/elasticsearch/reference/current/system-config.html
-RUN echo "root soft nofile 65536" >> /etc/security/limits.conf && \
-    echo "root hard nofile 65536" >> /etc/security/limits.conf && \
-    echo "root soft nproc 4096" >> /etc/security/limits.conf && \
-    echo "root hard nproc 4096" >> /etc/security/limits.conf && \
-    echo "vm.max_map_count = 262144" >> /etc/sysctl.conf && \
-    wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz" && \
-    wget "https://artifacts.elastic.co/downloads/elasticsearch/${VER_ELASTICSEARCH}.tar.gz.sha512" && \
-    shasum -a 512 -c "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
-    rm -f "${VER_ELASTICSEARCH}.tar.gz.sha512" && \
-# 2. Logstash
-    mkdir -p "$DIR_LOG" && \
+# Logstash
+RUN mkdir -p "$DIR_LOG" && \
     wget "https://artifacts.elastic.co/downloads/logstash/${VER_LOGSTASH}.tar.gz" && \
     wget "https://artifacts.elastic.co/downloads/logstash/${VER_LOGSTASH}.tar.gz.sha512" && \
     shasum -a 512 -c "${VER_LOGSTASH}.tar.gz.sha512" && \
@@ -42,25 +27,15 @@ RUN echo "root soft nofile 65536" >> /etc/security/limits.conf && \
 # install Filebeat
 # https://www.elastic.co/guide/en/beats/filebeat/current/filebeat-installation.html
     wget "https://artifacts.elastic.co/downloads/beats/filebeat/${VER_FILEBEAT}.deb" && \
-    dpkg -i "${VER_FILEBEAT}.deb" && \
-#    rm -f "${VER_FILEBEAT}.deb" && \
-# 3. Kibana
-    wget "https://artifacts.elastic.co/downloads/kibana/${VER_KIBANA}.tar.gz" && \
-    wget "https://artifacts.elastic.co/downloads/kibana/${VER_KIBANA}.tar.gz.sha512" && \
-    shasum -a 512 -c "${VER_KIBANA}.tar.gz.sha512" && \
-    rm -f "${VER_KIBANA}.tar.gz.sha512"
+    dpkg -i "${VER_FILEBEAT}.deb"
 
-COPY common/common.sh /$DIR_PROJECT/common.sh
-COPY common/elasticsearch.yml /$DIR_PROJECT/elasticsearch.yml
-COPY common/kibana.yml /$DIR_PROJECT/kibana.yml
-COPY elk/elk.sh /$DIR_PROJECT/elk.sh
-COPY elk/logstash.yml /$DIR_PROJECT/logstash.yml
-COPY elk/logstash.conf /$DIR_PROJECT/logstash.conf
-COPY elk/pipelines.yml /$DIR_PROJECT/pipelines.yml
-COPY elk/filebeat.yml /$DIR_PROJECT/filebeat.yml
+COPY ./elk/elk.sh /$DIR_STACK/elk.sh
+COPY ./elk/logstash.yml /$DIR_STACK/logstash.yml
+COPY ./elk/logstash.conf /$DIR_STACK/logstash.conf
+COPY ./elk/pipelines.yml /$DIR_STACK/pipelines.yml
+COPY ./elk/filebeat.yml /$DIR_STACK/filebeat.yml
 
-RUN adduser --disabled-password --gecos '' elasticsearch && \
-    echo 'elasticsearch ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+RUN chown -R elasticsearch:elasticsearch /$DIR_STACK
 
 # clean
 RUN apt-get autoremove && \
@@ -74,4 +49,4 @@ RUN apt-get autoremove && \
 # SSH | Kibana | Logstash HTTP | Logstash TCP | Logstash UDP
 EXPOSE 22 5601 8888 12345 12345/udp
 
-CMD ["sh", "-c", "/${DIR_PROJECT}/elk.sh"]
+CMD ["sh", "-c", "/${DIR_STACK}/elk.sh"]
