@@ -194,7 +194,10 @@ $ ./docker.sh down
 The index **logstash-2018.06.14** can be discovered on [Kibana](http://localhost:5601) with field **@timestamp** as *Time Filter field name*.
 
 ```
-$ curl -v -d '{"motor-glider": "Stemme S12", "airlifter": "Airbus C295"}'H "Content-Type: application/json" http://localhost:8888
+$ man curl
+$ curl --help
+
+$ curl -v -d '{"motor-glider": "Stemme S12", "airlifter": "Airbus C295"}' http://localhost:8888
 * Rebuilt URL to: http://localhost:8888/
 *   Trying 127.0.0.1...
 * Connected to localhost (127.0.0.1) port 8888 (#0)
@@ -224,16 +227,16 @@ On Kibana you may need to check  *Today* or *This Week*.
 The index **fluentd** can be discovered on [Kibana](http://localhost:5601) with field **@timestamp** as *Time Filter field name*.
 
 ```
-$ man curl
-
-$ curl --help
-
 $ TIMESTAMP=$(env TZ=Atlantic/Reykjavik date +"%Y-%m-%dT%H:%M:%S.%3NZ")
+$ echo $TIMESTAMP 
+2018-06-14T19:54:10.830Z
+
 $ TIMESTAMP=$(date -d '3 hour ago' +"%Y-%m-%dT%H:%M:%S.%3NZ")
 $ echo $TIMESTAMP 
 2018-06-14T19:54:19.095Z
 
-$ curl -v -d "json={\"@timestamp\":\"${TIMESTAMP}\",\"airliner\":\"Airbus A350\",\"helicopter\":\"Eurocopter EC175\"}" http://localhost:8888/input-logs
+$ curl -v -d "json={\"@timestamp\":\"${TIMESTAMP}\",\"airliner\":\"Airbus A350\", \
+                    \"helicopter\":\"Eurocopter EC175\"}" http://localhost:8888/input-logs
 *   Trying 127.0.0.1...
 * Connected to localhost (127.0.0.1) port 8888 (#0)
 > POST /input-logs HTTP/1.1
